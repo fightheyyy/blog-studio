@@ -4,6 +4,8 @@
 
 克隆下来，改成自己的首页，开始写。上线后只有 HTML、CSS、JavaScript 和静态资源，读者无需连接 Studio。
 
+[在线示例](https://fightheyyy.github.io/blog-studio/) · [使用这个模板](https://github.com/fightheyyy/blog-studio/generate) · [GitHub 仓库](https://github.com/fightheyyy/blog-studio)
+
 ![Homepage preview](docs/home-preview.png)
 
 ## 开始
