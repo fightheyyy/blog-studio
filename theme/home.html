@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta property="og:type" content="website"><title>Blog Studio</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="preload" href="assets/fonts/syne-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="home-page">
+  <a class="skip-link" href="#blog">Skip to writing</a>
+  <main class="personal-home">
+    <section class="identity-section" id="top" aria-labelledby="home-title">
+      <h1 class="name-mark" id="home-title" data-name-mark><span class="name-stem" aria-hidden="true"></span><span class="name-tail-group" aria-hidden="true"></span></h1>
+      <div class="identity-copy"><p class="identity-primary"></p><p class="identity-secondary"></p></div>
+    </section>
+    <section class="index-section" id="projects" aria-labelledby="projects-title">
+      <h2 id="projects-title" class="section-title reveal-item">Projects</h2><div class="link-index project-index"></div>
+    </section>
+    <section class="index-section writing-index-section" id="blog" aria-labelledby="writing-title">
+      <h2 id="writing-title" class="section-title reveal-item">Writing</h2><div class="link-index writing-index"></div>
+    </section>
+  </main>
+  <footer class="personal-footer reveal-item"><nav class="social-links" aria-label="Social and contact links"></nav></footer>
+  <script src="script.js"></script>
+</body>
+</html>

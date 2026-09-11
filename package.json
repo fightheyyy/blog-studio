@@ -1,0 +1,16 @@
+{
+  "name": "blog-studio",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "An editorial static blog template with a local writing studio.",
+  "license": "MIT",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "studio": "node studio/server.mjs",
+    "dev": "npm run studio",
+    "build": "node scripts/build.mjs",
+    "test": "node --test studio/test/*.test.mjs"
+  },
+  "dependencies": { "cheerio": "^1.1.2" }
+}

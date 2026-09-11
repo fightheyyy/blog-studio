@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light" />
+    <meta
+      name="description"
+      content="Blog Studio：在本地编辑、预览并发布静态博客文章。"
+    />
+    <title>Blog Studio</title>
+    <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+    <link rel="stylesheet" href="/studio/studio.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#article-form">跳到文章编辑区</a>
+
+    <div class="studio-shell">
+      <aside class="library-panel" aria-label="文章库">
+        <div class="studio-brand">
+          <a href="/index.html" target="_blank" rel="noreferrer" aria-label="打开博客首页">
+            <span class="brand-stem">Blog</span><span class="brand-tail">Studio</span>
+          </a>
+          <span class="brand-caption">Blog Studio</span>
+        </div>
+
+        <a class="secondary-button settings-link" href="/studio/site.html">首页与站点设置 ↗</a>
+        <button class="new-post-button" id="new-post" type="button">
+          <span aria-hidden="true">＋</span>
+          新建文章
+        </button>
+
+        <div class="library-heading">
+          <span>文章</span>
+          <span id="post-count">0</span>
+        </div>
+        <nav class="post-list" id="post-list" aria-label="已有文章"></nav>
+
+        <section class="repo-card" aria-labelledby="repo-title">
+          <div class="repo-card-heading">
+            <span class="status-dot" id="repo-dot" aria-hidden="true"></span>
+            <h2 id="repo-title">Repository</h2>
+          </div>
+          <p class="repo-branch" id="repo-branch">正在读取 Git 状态…</p>
+          <p class="repo-remote" id="repo-remote"></p>
+          <button class="text-button" id="refresh-status" type="button">刷新状态</button>
+        </section>
+      </aside>
+
+      <main class="workspace" id="article-form">
+        <header class="workspace-header">
+          <div>
+            <p class="eyebrow" id="document-kind">ARTICLE / LOCAL DRAFT</p>
+            <h1 id="workspace-title">选择一篇文章</h1>
+          </div>
+          <div class="document-state" id="document-state" aria-live="polite">
+            <span class="document-state-dot" aria-hidden="true"></span>
+            <span>未修改</span>
+          </div>
+        </header>
+
+        <section class="metadata-panel" aria-labelledby="metadata-title">
+          <div class="section-heading-row">
+            <div>
+              <p class="section-index">01</p>
+              <h2 id="metadata-title">文章信息</h2>
+            </div>
+            <p>这些字段会同步到标题区、搜索摘要和首页链接。</p>
+          </div>
+
+          <div class="metadata-grid">
+            <label class="field field-wide">
+              <span>文章标题</span>
+              <input id="title" name="title" type="text" maxlength="200" autocomplete="off" />
+            </label>
+
+            <label class="field field-wide">
+              <span>大标题分行 <small>每行对应页面中的一行</small></span>
+              <textarea id="headline-lines" name="headlineLines" rows="3"></textarea>
+            </label>
+
+            <label class="field">
+              <span>Slug <small>保存后不可更改</small></span>
+              <div class="slug-field">
+                <span>/posts/</span>
+                <input
+                  id="slug"
+                  name="slug"
+                  type="text"
+                  inputmode="url"
+                  pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
+                  autocomplete="off"
+                  placeholder="my-field-note"
+                />
+                <span>.html</span>
+              </div>
+            </label>
+
+            <label class="field">
+              <span>栏目标签</span>
+              <input id="kicker" name="kicker" type="text" maxlength="160" autocomplete="off" />
+            </label>
+
+            <label class="field">
+              <span>发布日期</span>
+              <input id="date" name="date" type="date" />
+            </label>
+
+            <label class="field">
+              <span>预计阅读</span>
+              <span class="number-field">
+                <input id="read-minutes" name="readMinutes" type="number" min="1" max="999" step="1" />
+                <span>分钟</span>
+              </span>
+            </label>
+
+            <label class="field field-wide">
+              <span>页头导语</span>
+              <textarea id="deck" name="deck" rows="3" maxlength="800"></textarea>
+            </label>
+
+            <label class="field field-wide">
+              <span>搜索摘要 <small>留空时使用页头导语</small></span>
+              <textarea id="description" name="description" rows="2" maxlength="800"></textarea>
+            </label>
+          </div>
+        </section>
+
+        <section class="editor-section" aria-labelledby="editor-title">
+          <div class="section-heading-row editor-heading-row">
+            <div>
+              <p class="section-index">02</p>
+              <h2 id="editor-title">正文</h2>
+            </div>
+            <div class="mode-switch" role="group" aria-label="编辑模式">
+              <button class="mode-button is-active" type="button" data-mode="visual">可视化</button>
+              <button class="mode-button" type="button" data-mode="html">HTML</button>
+            </div>
+          </div>
+
+          <div class="toolbar" id="toolbar" role="toolbar" aria-label="正文格式工具">
+            <button type="button" data-command="formatBlock" data-value="p" title="正文">P</button>
+            <button type="button" data-command="formatBlock" data-value="h2" title="二级标题">H2</button>
+            <button type="button" data-command="formatBlock" data-value="h3" title="三级标题">H3</button>
+            <span class="toolbar-divider" aria-hidden="true"></span>
+            <button type="button" data-command="bold" title="粗体"><strong>B</strong></button>
+            <button type="button" data-command="italic" title="斜体"><em>I</em></button>
+            <button type="button" data-command="createLink" title="链接">Link</button>
+            <span class="toolbar-divider" aria-hidden="true"></span>
+            <button type="button" data-command="insertUnorderedList" title="无序列表">• List</button>
+            <button type="button" data-command="insertOrderedList" title="有序列表">1. List</button>
+            <button type="button" data-action="lead" title="切换为开篇段落">Lead</button>
+            <button type="button" data-action="callout" title="插入提示块">Callout</button>
+            <button type="button" data-action="code" title="插入代码块">Code</button>
+            <button type="button" data-action="image" title="上传并插入图片">Image</button>
+          </div>
+
+          <div class="editor-workbench" data-editor-mode="visual">
+            <section class="html-pane" id="html-pane" aria-label="正文 HTML 编辑器">
+              <div class="pane-label">
+                <span>ARTICLE CONTENT / HTML</span>
+                <span id="html-count">0 chars</span>
+              </div>
+              <textarea
+                id="content-html"
+                spellcheck="false"
+                aria-label="正文 HTML"
+                placeholder="<p class=&quot;article-lead&quot;>从这里开始写…</p>"
+              ></textarea>
+            </section>
+
+            <section class="preview-pane" aria-label="文章实时预览">
+              <div class="pane-label preview-label">
+                <div>
+                  <span>LIVE PAGE</span>
+                  <span class="edit-hint" id="edit-hint">点击预览中的正文直接编辑</span>
+                </div>
+                <div class="viewport-switch" role="group" aria-label="预览宽度">
+                  <button class="viewport-button is-active" type="button" data-viewport="desktop">Desktop</button>
+                  <button class="viewport-button" type="button" data-viewport="mobile">Mobile</button>
+                </div>
+              </div>
+              <div class="preview-stage" id="preview-stage">
+                <iframe
+                  id="preview-frame"
+                  title="文章实时预览"
+                  sandbox="allow-same-origin"
+                ></iframe>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <div class="workspace-spacer" aria-hidden="true"></div>
+      </main>
+
+      <footer class="action-bar">
+        <div class="action-message" id="action-message" aria-live="polite">
+          编辑只保存在本地，点击发布后才会推送到 GitHub。
+        </div>
+        <div class="action-buttons">
+          <a class="secondary-button" id="open-page" href="/index.html" target="_blank" rel="noreferrer">
+            打开页面
+          </a>
+          <button class="secondary-button" id="save-draft" type="button">保存到本地</button>
+          <button class="publish-button" id="publish" type="button">
+            发布站点
+            <span aria-hidden="true">↗</span>
+          </button>
+        </div>
+      </footer>
+    </div>
+
+    <input id="image-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden />
+
+    <dialog class="publish-dialog" id="publish-dialog">
+      <form method="dialog">
+        <button class="dialog-close" value="cancel" aria-label="关闭发布窗口">×</button>
+      </form>
+      <p class="eyebrow">GIT PUBLISH</p>
+      <h2>发布所有已保存的内容？</h2>
+      <p class="dialog-copy">
+        Studio 会先保存当前文章，再提交站点配置、首页、所有已保存的文章和图片，推送到 origin 的当前同名分支。其他本地提交也会一并推送。
+      </p>
+      <dl class="publish-summary">
+        <div>
+          <dt>文章</dt>
+          <dd id="publish-article-name">—</dd>
+        </div>
+        <div>
+          <dt>目标</dt>
+          <dd id="publish-target">—</dd>
+        </div>
+      </dl>
+      <label class="field dialog-field">
+        <span>提交说明</span>
+        <input id="commit-message" type="text" maxlength="160" />
+      </label>
+      <div class="dialog-warning" id="publish-warning" hidden></div>
+      <div class="dialog-actions">
+        <form method="dialog"><button class="secondary-button" value="cancel">取消</button></form>
+        <button class="publish-button" id="confirm-publish" type="button">确认并推送</button>
+      </div>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+    <div class="loading-cover" id="loading-cover" aria-live="polite">
+      <div class="loading-mark"><span>Blog</span><strong>Studio</strong></div>
+      <p>正在打开你的文章库…</p>
+    </div>
+
+    <script type="module" src="/studio/studio.js"></script>
+  </body>
+</html>

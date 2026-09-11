@@ -1,0 +1,16 @@
+{
+  "name": "Yourname",
+  "nameStem": "Your",
+  "nameTail": "name",
+  "language": "zh-CN",
+  "title": "Yourname — Projects & Writing",
+  "description": "做过的项目，和做项目时留下的笔记。",
+  "url": "",
+  "intro": "I make small things for the web.",
+  "about": "这里放我做过的项目，也记下一些还没想明白的问题。",
+  "projects": [
+    { "name": "A small beginning", "description": "从这里认识这个博客", "links": [{ "label": "Read", "url": "posts/a-small-beginning.html" }] },
+    { "name": "Type & Space", "description": "这套页面的排版示例", "links": [{ "label": "Read", "url": "posts/type-and-space.html" }] }
+  ],
+  "links": [{ "label": "Writing", "url": "#blog" }]
+}

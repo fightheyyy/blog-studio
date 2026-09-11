@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta property="og:type" content="article">
+
+
+    <meta property="article:published_time" content="2026-08-28">
+    <title>正文、代码和一点留白</title>
+
+    <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+    <link rel="preload" href="../assets/fonts/syne-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin="">
+    <link rel="stylesheet" href="../styles.css">
+  <meta name="description" content="Blog Studio 文章页面的排版样本。"><meta name="author" content="Yourname"><meta property="og:title" content="正文、代码和一点留白"><meta property="og:description" content="Blog Studio 文章页面的排版样本。"><meta property="og:site_name" content="Yourname — Projects &amp; Writing"></head>
+  <body class="article-page">
+    <header class="article-site-header">
+      <a class="name article-name-mark" href="../index.html" aria-label="Yourname">
+        <span class="article-name-stem" aria-hidden="true">Your</span>
+        <span class="article-name-tail" aria-hidden="true">name</span>
+      </a>
+      <nav class="nav" aria-label="文章导航"><a href="../index.html#blog">Writing</a><a href="../index.html#projects">Projects</a></nav>
+    </header>
+
+    <main class="article-shell">
+      <article>
+        <header class="article-header">
+          <p class="article-kicker">Style Notes · 02</p>
+          <h1 aria-label="正文、代码和一点留白"><span>正文、代码</span><span>和一点留白</span></h1>
+          <p class="article-deck">一页排版样本，看看长文、列表、引用和代码放在一起是什么样子。</p>
+          <div class="article-meta">
+            <time datetime="2026-08-28">2026.08.28</time>
+            <span>约 3 分钟阅读</span>
+          </div>
+        </header>
+
+        <div class="article-content"><p class="article-lead">文章页把大部分空间留给正文。页头放标题和简短的介绍，栏目标签靠在旁边；向下读，文字收进一条较窄的阅读区域。</p>
+<h2>把一件事说明白</h2><p>这一段是普通正文。你可以用 <strong>粗体</strong> 标出一处重点，用 <em>斜体</em> 留下一个旁注，也可以把 <code>site.config.json</code> 这样的文件名放进行内代码。</p>
+<blockquote><p>引用是把别人的话暂时请到页面里。记得写清楚出处；这里是一段模板示例。</p></blockquote>
+<h2>按顺序写下来</h2><ol><li>先记下遇到的问题。</li><li>再写你试过的办法。</li><li>留下结果，包括没解决的部分。</li></ol>
+<h3>一小段代码</h3><pre class="article-flow" role="region" aria-label="配置示例"><code>{
+  "name": "Yourname",
+  "intro": "I make small things for the web."
+}</code></pre>
+<h2>需要比较时</h2><div class="article-table-wrap" tabindex="0" role="region" aria-label="保存与发布的区别"><table><thead><tr><th>动作</th><th>会发生什么</th></tr></thead><tbody><tr><td>保存到本地</td><td>写入文章文件，更新首页索引。</td></tr><tr><td>构建</td><td>生成可独立托管的静态页面。</td></tr><tr><td>发布站点</td><td>提交已保存内容，推送到你的 Git 远程仓库。</td></tr></tbody></table></div>
+<p>图片可以用编辑器的 Image 按钮插入。给图片写一句说明，让看不到图片的人也能知道它想表达什么。</p></div>
+      </article>
+    </main>
+
+    <footer class="article-footer">
+      <a href="../index.html#blog">← Back to writing</a>
+      <span>Yourname</span>
+    </footer>
+</body></html>

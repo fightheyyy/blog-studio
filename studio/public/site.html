@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>首页与站点设置 · Blog Studio</title>
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+  <link rel="stylesheet" href="/studio/studio.css">
+</head>
+<body class="site-settings-page">
+  <a class="skip-link" href="#site-form">跳到站点设置</a>
+  <header class="settings-header">
+    <a class="settings-brand" href="/studio/">Blog<span class="brand-tail">Studio</span></a>
+    <nav aria-label="Studio 导航"><a href="/studio/">文章编辑</a><a href="/index.html" target="_blank" rel="noreferrer">打开首页 ↗</a></nav>
+  </header>
+  <main class="settings-main">
+    <div class="workspace-header"><div><p class="eyebrow">MAKE IT YOURS</p><h1>先从你的名字开始。</h1></div><span id="settings-state" role="status">正在读取…</span></div>
+    <div class="settings-layout">
+      <form id="site-form">
+        <section class="metadata-panel">
+          <div class="section-heading-row"><div><p class="section-index">01</p><h2>你与这个网站</h2></div></div>
+          <div class="metadata-grid">
+            <label class="field field-wide"><span>显示名称 <small>作者署名与无障碍名称</small></span><input name="name" maxlength="48" required></label>
+            <label class="field"><span>名字 · 实心部分</span><input name="nameStem" maxlength="36"></label>
+            <label class="field"><span>名字 · 描边部分</span><input name="nameTail" maxlength="12"></label>
+            <label class="field field-wide"><span>一句介绍</span><textarea name="intro" rows="2" maxlength="300" required></textarea></label>
+            <label class="field field-wide"><span>再介绍一点</span><textarea name="about" rows="3" maxlength="800"></textarea></label>
+            <label class="field field-wide"><span>浏览器与分享标题</span><input name="title" maxlength="160" required></label>
+            <label class="field field-wide"><span>站点摘要</span><textarea name="description" rows="2" maxlength="800"></textarea></label>
+            <label class="field field-wide"><span>网站正式地址 <small>部署前可留空</small></span><input name="url" type="url" placeholder="https://username.github.io/my-blog/" maxlength="2000"><small>使用仓库名作为网址路径时，把这段路径也填上。</small></label>
+            <label class="field"><span>内容语言 <small>zh-CN / en</small></span><input name="language" maxlength="20" required></label>
+          </div>
+        </section>
+        <section class="metadata-panel">
+          <div class="section-heading-row"><div><p class="section-index">02</p><h2>做过的项目</h2></div><button class="secondary-button" id="add-project" type="button">＋ 添加项目</button></div>
+          <p class="settings-hint">按添加顺序展示。每个项目可以放多个链接；没有项目时，这一栏会自动隐藏。</p>
+          <div id="projects-editor"></div>
+        </section>
+        <section class="metadata-panel">
+          <div class="section-heading-row"><div><p class="section-index">03</p><h2>在哪里找到你</h2></div><button class="secondary-button" id="add-social" type="button">＋ 添加链接</button></div>
+          <p class="settings-hint">可以放 GitHub、个人主页，或 mailto:you@example.com。</p>
+          <div id="social-editor"></div>
+        </section>
+      </form>
+      <aside class="home-preview-panel" aria-label="首页预览">
+        <div class="pane-label"><span>YOUR HOME / PREVIEW</span><span id="preview-state">等待预览</span></div>
+        <iframe id="home-preview" title="首页实时预览" sandbox="allow-same-origin"></iframe>
+      </aside>
+    </div>
+  </main>
+  <footer class="action-bar settings-actions">
+    <p class="action-message" id="settings-message" role="status">修改会同步到首页和文章页，保存后在本地生效。</p>
+    <div class="action-buttons"><button class="secondary-button" type="submit" form="site-form" id="save-site">保存到本地</button><button class="publish-button" type="button" id="publish-site">发布站点 ↗</button></div>
+  </footer>
+  <dialog class="publish-dialog" id="site-publish-dialog">
+    <form method="dialog"><button class="dialog-close" value="cancel" aria-label="关闭发布窗口">×</button></form>
+    <p class="eyebrow">GIT PUBLISH</p><h2>发布所有已保存的内容？</h2>
+    <p class="dialog-copy">保存此页配置，并提交首页、所有已保存的文章和图片。当前分支已有的本地提交也会一并推送。</p>
+    <p id="site-publish-target"></p>
+    <label class="field"><span>提交说明</span><input id="site-commit-message" maxlength="160" value="publish: update my blog"></label>
+    <p class="dialog-warning" id="site-publish-warning"></p>
+    <div class="dialog-actions"><form method="dialog"><button class="secondary-button" value="cancel">取消</button></form><button class="publish-button" id="site-confirm-publish" type="button">确认并推送</button></div>
+  </dialog>
+  <script type="module" src="/studio/site.js"></script>
+</body>
+</html>
