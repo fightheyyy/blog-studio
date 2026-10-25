@@ -33,6 +33,31 @@ Studio 对同一草稿使用版本检查，遇到其他窗口更新时停止覆�
 `.studio-data/<workspace>/history/`。若分支有其他未推送提交，发布窗口会列出提醒；Git
 推送会包含这些已有提交。不会强制推送，也不会在浏览器中保存 GitHub 凭据。
 
+### Mac 上连接 fightheyyy.dev
+
+需要 **Node.js 22 或更新版本**与 Git。把写作台和博客仓库克隆到同一个父目录：
+
+```sh
+git clone https://github.com/fightheyyy/blog-studio.git
+git clone https://github.com/fightheyyy/fightheyyy.github.io.git
+cd blog-studio
+npm ci
+cp studio.config.fightheyyy.example.json studio.config.local.json
+npm run studio
+```
+
+打开 <http://127.0.0.1:4174/studio/>，即可读取自己的文章，写 Markdown，并切换
+“炫酷版 / 简约版”预览。这里不需要安装或启动博客的 Nuxt 依赖。若博客已经克隆，
+保留原目录，在本地配置中把 `siteRoot` 改成实际路径；相对路径以 `blog-studio/` 为起点。
+
+以后启动只需在 `blog-studio/` 里运行 `npm run studio`。写作期间保持终端运行，
+`Command+S` 立即保存草稿。发布前先在博客目录运行 `git pull --ff-only`，再回写作台
+编辑或发布；首次推送需要在 Mac 上配置好 Git 署名和该博客仓库的 GitHub 写入凭据。
+Studio 会使用已有 Git 凭据，不提供登录窗口。
+
+草稿和待发布图片只保存在当前电脑的 `.studio-data/`，不会随 `git clone` 或 `git pull`
+同步到另一台电脑。已发布的文章保存在博客仓库，拉取后可继续编辑。本地配置不进入 Git。
+
 ---
 
 一个带本地编辑器的静态博客模板。大字、描边姓名、米白底、项目与文章索引，以及完整的长文页面。
