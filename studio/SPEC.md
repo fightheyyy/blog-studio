@@ -20,6 +20,15 @@ renders the current manuscript. `/api/save` writes only a local JSON draft, whil
 `/api/publish` requires an explicit request and synchronizes only the current article,
 its assets, the classic writing index and its legacy redirect before scoped Git push.
 
+Theme previews reuse published Editorial SSR markup/CSS or the local classic
+article renderer. Only existing public template URLs are fetched; manuscript data
+is inserted locally. Public templates are cached in the private workspace folder.
+Scripts, trackers, embedded frames, and event attributes are removed. Full-width
+preview uses a sandboxed modal iframe, so desktop layout can be inspected separately
+from the narrow split pane. If the actual theme cannot be loaded, the API returns an
+explicit body-only fallback notice. Read-only preview requests bypass the mutation
+queue, and concurrent template fetches are coalesced to avoid delaying autosave.
+
 No AI providers, prompts, generated prose, cloud draft storage or credential forms
 are part of this mode. Autosave and saved revisions are local to this machine.
 

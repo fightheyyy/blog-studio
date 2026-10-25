@@ -204,23 +204,30 @@
                   data-presentation="editorial"
                   aria-pressed="true"
                 >
-                  Editorial</button
+                  炫酷版</button
                 ><button
                   type="button"
                   data-presentation="minimal"
                   aria-pressed="false"
                 >
-                  Minimal
+                  简约版
                 </button>
               </div>
+              <button
+                id="full-preview"
+                class="full-preview-button"
+                type="button"
+              >
+                完整预览 ↗
+              </button>
             </div>
             <iframe
               id="reading-preview"
               title="文章阅读预览"
               sandbox="allow-same-origin"
             ></iframe>
-            <div class="preview-note">
-              正文排版预览 · 不执行文章脚本 · 发布后两版一起更新
+            <div class="preview-note" id="preview-notice">
+              正在读取真实主题…
             </div>
           </section>
         </section>
@@ -235,6 +242,20 @@
       accept="image/png,image/jpeg,image/webp,image/gif"
       hidden
     />
+    <dialog id="full-preview-dialog" class="full-preview-dialog">
+      <header>
+        <div>
+          <strong id="full-preview-label">炫酷版完整预览</strong
+          ><span id="full-preview-notice">静态主题预览</span>
+        </div>
+        <form method="dialog"><button type="submit">返回写作 ×</button></form>
+      </header>
+      <iframe
+        id="full-preview-frame"
+        title="完整页面主题预览"
+        sandbox="allow-same-origin"
+      ></iframe>
+    </dialog>
     <dialog id="publish-dialog" class="publish-dialog">
       <form method="dialog">
         <button class="dialog-close" aria-label="关闭发布窗口">×</button>

@@ -20,6 +20,7 @@ const state = {
   autosave: 0,
   previewTimer: 0,
   previewId: 0,
+  previewHtml: "",
   presentation: "editorial",
   busy: false,
   conflict: false,
@@ -267,14 +268,22 @@ function updateCounts() {
 }
 function requestPreview() {
   clearTimeout(state.previewTimer);
+  const id = ++state.previewId;
+  $("#preview-notice").textContent = "正在更新主题预览…";
   state.previewTimer = setTimeout(async () => {
-    const id = ++state.previewId;
     try {
-      const { html } = await api("/api/preview", {
+      const { html, notice } = await api("/api/preview", {
         article: collect(),
         presentation: state.presentation,
       });
       if (id === state.previewId) {
+        state.previewHtml = html;
+        $("#preview-notice").textContent = notice;
+        $("#full-preview-notice").textContent = notice;
+        $("#full-preview-label").textContent =
+          state.presentation === "minimal"
+            ? "简约版完整预览"
+            : "炫酷版完整预览";
         const frame = $("#reading-preview");
         let scroll = 0;
         try {
@@ -286,12 +295,19 @@ function requestPreview() {
           } catch {}
         };
         frame.srcdoc = html;
+        if ($("#full-preview-dialog").open)
+          $("#full-preview-frame").srcdoc = html;
       }
     } catch {
-      /* Transient invalid metadata does not interrupt writing. Saving reports errors. */
+      if (id === state.previewId)
+        $("#preview-notice").textContent = "预览尚未更新，请检查文章设置。";
     }
   }, 280);
 }
+$("#full-preview").addEventListener("click", () => {
+  $("#full-preview-frame").srcdoc = state.previewHtml || "";
+  $("#full-preview-dialog").showModal();
+});
 function replaceSelection(before, after = "", placeholder = "") {
   const input = $("#manuscript");
   input.focus();

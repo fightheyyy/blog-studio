@@ -1020,3 +1020,84 @@ button {
 .library-filters button {
   font-size: 12px;
 }
+.reading-pane .pane-heading {
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-block: 12px;
+}
+.reading-pane .pane-heading > span {
+  margin-right: auto;
+}
+.full-preview-button {
+  font-size: 10px;
+  color: var(--blue);
+  padding: 5px 0;
+  white-space: nowrap;
+}
+.full-preview-dialog {
+  width: calc(100vw - 32px);
+  max-width: 1600px;
+  height: calc(100dvh - 32px);
+  max-height: none;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--sheet);
+  overflow: hidden;
+}
+.full-preview-dialog::backdrop {
+  background: #242b2280;
+  backdrop-filter: blur(3px);
+}
+.full-preview-dialog > header {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 25px;
+  border-bottom: 1px solid var(--line);
+  gap: 15px;
+}
+.full-preview-dialog > header > div {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-width: 0;
+}
+.full-preview-dialog strong {
+  font-size: 13px;
+  white-space: nowrap;
+}
+.full-preview-dialog header span {
+  font-size: 10px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.full-preview-dialog header button {
+  font-size: 12px;
+  color: var(--blue);
+  white-space: nowrap;
+}
+.full-preview-dialog iframe {
+  border: 0;
+  width: 100%;
+  height: calc(100% - 60px);
+  display: block;
+  background: var(--paper);
+}
+@media (max-width: 640px) {
+  .full-preview-dialog {
+    width: 100vw;
+    height: 100dvh;
+    border: 0;
+    border-radius: 0;
+  }
+  .full-preview-dialog header span {
+    display: none;
+  }
+  .full-preview-dialog > header {
+    padding-inline: 16px;
+  }
+}

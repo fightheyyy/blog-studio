@@ -60,7 +60,7 @@ export function createStudioServer({
       }
 
       if (pathname.startsWith("/api/")) {
-        if (request.method === "POST") {
+        if (request.method === "POST" && pathname !== "/api/preview") {
           const operation = mutationQueue.then(() =>
             handleApi(request, response, pathname, resolvedRepoRoot, workspace),
           );
@@ -103,6 +103,16 @@ export function createStudioServer({
         await sendFile(
           response,
           within(base, pathname.slice("/blog-fonts/".length)),
+          request.method === "HEAD",
+          base,
+        );
+        return;
+      }
+      if (workspace && pathname.startsWith("/preview-site/")) {
+        const base = path.join(workspace.siteRoot, "public");
+        await sendFile(
+          response,
+          within(base, pathname.slice("/preview-site/".length)),
           request.method === "HEAD",
           base,
         );

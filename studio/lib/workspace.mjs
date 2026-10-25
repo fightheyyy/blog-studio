@@ -19,6 +19,7 @@ import {
   buildWritingIndex,
 } from "./articles.mjs";
 import { getGitStatus, publishPaths, runGit } from "./git.mjs";
+import { renderEditorialTheme, renderMinimalTheme } from "./theme-preview.mjs";
 
 const md = new MarkdownIt({ html: true, linkify: true, typographer: false });
 const categories = ["Agents", "Hardware", "Evals", "Skills"];
@@ -265,14 +266,41 @@ function cleanPreview(html) {
   });
   return $.html();
 }
-export function renderWorkspacePreview(
+export async function renderWorkspacePreview(
   workspace,
   input,
   presentation = "editorial",
 ) {
   const article = normalize(input);
   const body = cleanPreview(md.render(article.markdown));
-  return `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta http-equiv="Content-Security-Policy" content="script-src 'none'; object-src 'none'; base-uri 'none'"><link rel="stylesheet" href="/studio/reading.css"></head><body data-presentation="${presentation === "minimal" ? "minimal" : "editorial"}"><main class="reading-page"><header><p class="reading-category">${escape(article.category)}</p><h1>${escape(article.title || "无标题文章")}</h1>${article.description ? `<p class="reading-description">${escape(article.description)}</p>` : ""}<div class="reading-meta">${escape(workspace.author)} <span>${escape(article.date)}</span> <span>${article.readingMinutes} min read</span></div></header><article>${body || '<p class="reading-empty">正文预览会出现在这里。</p>'}</article></main></body></html>`;
+  try {
+    if (presentation !== "minimal")
+      return {
+        html: await renderEditorialTheme(workspace, article, body),
+        kind: "theme",
+        notice: "Editorial 真实主题排版 · 静态预览，不运行页面脚本",
+      };
+    const source = await maybeRead(articlePath(workspace, article.slug));
+    const oldMarkdown = source ? matter(source).content : "";
+    const html = await renderClassicArticle(
+      workspace,
+      { ...article, title: article.title || "无标题文章" },
+      source,
+      oldMarkdown,
+    );
+    return {
+      html: renderMinimalTheme(html),
+      kind: "theme",
+      notice: "Minimal 真实主题排版 · 静态预览，不运行页面脚本",
+    };
+  } catch {
+    const html = `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta http-equiv="Content-Security-Policy" content="script-src 'none'; object-src 'none'; base-uri 'none'"><link rel="stylesheet" href="/studio/reading.css"></head><body data-presentation="${presentation === "minimal" ? "minimal" : "editorial"}"><main class="reading-page"><header><p class="reading-category">${escape(article.category)}</p><h1>${escape(article.title || "无标题文章")}</h1>${article.description ? `<p class="reading-description">${escape(article.description)}</p>` : ""}<div class="reading-meta">${escape(workspace.author)} <span>${escape(article.date)}</span> <span>${article.readingMinutes} min read</span></div></header><article>${body || '<p class="reading-empty">正文预览会出现在这里。</p>'}</article></main></body></html>`;
+    return {
+      html,
+      kind: "body",
+      notice: "真实主题暂时无法读取，当前仅显示正文排版",
+    };
+  }
 }
 
 function adjustRelativeLinks($, root) {
@@ -522,13 +550,13 @@ export async function handleWorkspaceApi(
     });
   if (request.method === "POST" && pathname === "/api/preview") {
     const payload = await readJson(request);
-    return send({
-      html: renderWorkspacePreview(
+    return send(
+      await renderWorkspacePreview(
         workspace,
         payload.article,
         payload.presentation,
       ),
-    });
+    );
   }
   if (request.method === "POST" && pathname === "/api/assets") {
     const payload = await readJson(request);
