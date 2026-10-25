@@ -1,16 +1,22 @@
 {
   "name": "blog-studio",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
-  "description": "An editorial static blog template with a local writing studio.",
+  "description": "A local writing studio for Markdown, private drafts, and dual-presentation Nuxt blogs, with a standalone HTML blog template.",
   "license": "MIT",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "studio": "node studio/server.mjs",
     "dev": "npm run studio",
     "build": "node scripts/build.mjs",
     "test": "node --test studio/test/*.test.mjs"
   },
-  "dependencies": { "cheerio": "^1.1.2" }
+  "dependencies": {
+    "cheerio": "^1.1.2",
+    "gray-matter": "^4.0.3",
+    "markdown-it": "^15.0.3"
+  }
 }

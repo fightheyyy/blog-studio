@@ -7,3 +7,5 @@ dist/
 npm-debug.log*
 .DS_Store
 Thumbs.db
+studio.config.local.json
+.studio-data/

@@ -1,5 +1,28 @@
 # Local Studio
 
+## Connected Nuxt workspace (0.2)
+
+`studio.config.local.json` or `BLOG_STUDIO_SITE_ROOT` selects an external Nuxt blog.
+The editor's application files remain in this repository; content and Git operations
+target the explicitly configured blog checkout. No changes are made to its articles
+at startup or while saving local drafts. Without workspace configuration the original
+standalone HTML/site-settings routes and template build remain available.
+
+`lib/workspace.mjs` owns Markdown/frontmatter loading, local versioned JSON drafts,
+read-only sanitized preview, staged image assets and per-article dual-style publication.
+The local HTTP mutation queue and Origin/Host checks apply to both adapters. Local
+drafts are excluded from Git and from static-serving allowlists. Preview executes no
+scripts, including analytics. A published draft is archived only after Git succeeds.
+
+GET `/api/workspace` exposes the selected target and schema categories; existing
+posts/template/status endpoints use the workspace adapter. POST `/api/preview`
+renders the current manuscript. `/api/save` writes only a local JSON draft, while
+`/api/publish` requires an explicit request and synchronizes only the current article,
+its assets, the classic writing index and its legacy redirect before scoped Git push.
+
+No AI providers, prompts, generated prose, cloud draft storage or credential forms
+are part of this mode. Autosave and saved revisions are local to this machine.
+
 ## Scope
 
 Loopback-only authoring: article library, metadata, visual/HTML editing, images, preview, homepage settings, and an explicit Git publish dialog. No credentials stored by Studio. Homepage uses a separate form so article drafts do not get overwritten during customization.

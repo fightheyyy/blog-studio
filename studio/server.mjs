@@ -14,6 +14,7 @@ import {
 import { getGitStatus, publishPaths } from "./lib/git.mjs";
 import { readSite, validateSite, renderHome } from "./lib/site.mjs";
 import { syncSite } from "./lib/sync.mjs";
+import { resolveWorkspace, handleWorkspaceApi } from "./lib/workspace.mjs";
 
 const moduleDir = path.dirname(fileURLToPath(import.meta.url));
 const defaultRepoRoot = path.resolve(moduleDir, "..");
@@ -35,7 +36,10 @@ const CONTENT_TYPES = new Map([
   [".mmd", "text/plain; charset=utf-8"],
 ]);
 
-export function createStudioServer({ repoRoot = defaultRepoRoot } = {}) {
+export function createStudioServer({
+  repoRoot = defaultRepoRoot,
+  workspace = null,
+} = {}) {
   const resolvedRepoRoot = path.resolve(repoRoot);
   let mutationQueue = Promise.resolve();
   return http.createServer(async (request, response) => {
@@ -43,7 +47,10 @@ export function createStudioServer({ repoRoot = defaultRepoRoot } = {}) {
 
     try {
       assertLocalHost(request);
-      const url = new URL(request.url ?? "/", `http://${request.headers.host ?? "127.0.0.1"}`);
+      const url = new URL(
+        request.url ?? "/",
+        `http://${request.headers.host ?? "127.0.0.1"}`,
+      );
       const pathname = decodeURIComponent(url.pathname);
 
       if (request.method === "GET" && pathname === "/") {
@@ -54,11 +61,19 @@ export function createStudioServer({ repoRoot = defaultRepoRoot } = {}) {
 
       if (pathname.startsWith("/api/")) {
         if (request.method === "POST") {
-          const operation = mutationQueue.then(() => handleApi(request, response, pathname, resolvedRepoRoot));
+          const operation = mutationQueue.then(() =>
+            handleApi(request, response, pathname, resolvedRepoRoot, workspace),
+          );
           mutationQueue = operation.catch(() => {});
           await operation;
         } else {
-          await handleApi(request, response, pathname, resolvedRepoRoot);
+          await handleApi(
+            request,
+            response,
+            pathname,
+            resolvedRepoRoot,
+            workspace,
+          );
         }
         return;
       }
@@ -70,23 +85,84 @@ export function createStudioServer({ repoRoot = defaultRepoRoot } = {}) {
         });
       }
 
-      const staticFile = resolveStaticFile(resolvedRepoRoot, pathname);
-      if (!staticFile) {
-        sendJson(response, 404, { ok: false, error: "页面不存在。", code: "NOT_FOUND" });
+      if (workspace && pathname === "/index.html") {
+        response.writeHead(302, { Location: workspace.siteUrl });
+        response.end();
         return;
       }
-      const allowedRoot = pathname.startsWith("/studio") ? path.join(resolvedRepoRoot, "studio", "public")
-        : pathname.startsWith("/assets/") ? path.join(resolvedRepoRoot, "assets")
-        : pathname.startsWith("/posts/") ? path.join(resolvedRepoRoot, "posts") : resolvedRepoRoot;
-      await sendFile(response, staticFile, request.method === "HEAD", allowedRoot);
+      if (
+        workspace &&
+        ["/studio/index.html", "/studio/site.html"].includes(pathname)
+      ) {
+        response.writeHead(302, { Location: "/studio/" });
+        response.end();
+        return;
+      }
+      if (workspace && pathname.startsWith("/blog-fonts/")) {
+        const base = path.join(workspace.siteRoot, "public/fonts");
+        await sendFile(
+          response,
+          within(base, pathname.slice("/blog-fonts/".length)),
+          request.method === "HEAD",
+          base,
+        );
+        return;
+      }
+      if (workspace && pathname.startsWith("/assets/posts/")) {
+        const relative = pathname.slice("/assets/".length);
+        for (const base of [
+          path.join(workspace.privateRoot, "assets"),
+          path.join(workspace.siteRoot, "public/assets"),
+          path.join(workspace.siteRoot, "public/classic/assets"),
+        ]) {
+          const file = within(base, relative);
+          if (await exists(file)) {
+            await sendFile(response, file, request.method === "HEAD", base);
+            return;
+          }
+        }
+        throw new StudioError("图片不存在。", { status: 404 });
+      }
+      const staticFile = resolveStaticFile(
+        resolvedRepoRoot,
+        pathname,
+        workspace,
+      );
+      if (!staticFile) {
+        sendJson(response, 404, {
+          ok: false,
+          error: "页面不存在。",
+          code: "NOT_FOUND",
+        });
+        return;
+      }
+      const allowedRoot = pathname.startsWith("/studio")
+        ? path.join(resolvedRepoRoot, "studio", "public")
+        : pathname.startsWith("/assets/")
+          ? path.join(resolvedRepoRoot, "assets")
+          : pathname.startsWith("/posts/")
+            ? path.join(resolvedRepoRoot, "posts")
+            : resolvedRepoRoot;
+      await sendFile(
+        response,
+        staticFile,
+        request.method === "HEAD",
+        allowedRoot,
+      );
     } catch (error) {
       sendError(response, error);
     }
   });
 }
 
-export async function startStudioServer({ repoRoot = defaultRepoRoot, port = 4174 } = {}) {
-  const server = createStudioServer({ repoRoot });
+export async function startStudioServer({
+  repoRoot = defaultRepoRoot,
+  port = 4174,
+  workspace,
+} = {}) {
+  const targetWorkspace =
+    workspace === undefined ? await resolveWorkspace(repoRoot) : workspace;
+  const server = createStudioServer({ repoRoot, workspace: targetWorkspace });
   await new Promise((resolve, reject) => {
     server.once("error", reject);
     server.listen(port, "127.0.0.1", resolve);
@@ -94,21 +170,40 @@ export async function startStudioServer({ repoRoot = defaultRepoRoot, port = 417
   return server;
 }
 
-async function handleApi(request, response, pathname, repoRoot) {
+async function handleApi(request, response, pathname, repoRoot, workspace) {
+  if (workspace)
+    return handleWorkspaceApi(request, response, pathname, workspace, {
+      sendJson,
+      readJson,
+      assertMutationRequest,
+    });
   if (request.method === "GET" && pathname === "/api/site") {
     sendJson(response, 200, { ok: true, site: await readSite(repoRoot) });
     return;
   }
-  if (request.method === "POST" && ["/api/site", "/api/site/preview"].includes(pathname)) {
+  if (
+    request.method === "POST" &&
+    ["/api/site", "/api/site/preview"].includes(pathname)
+  ) {
     assertMutationRequest(request);
     const payload = await readJson(request);
     const site = validateSite(payload.site);
     if (pathname.endsWith("/preview")) {
-      const template = await readFile(path.join(repoRoot, "theme", "home.html"), "utf8");
-      sendJson(response, 200, { ok: true, html: renderHome(template, site, await listArticles(repoRoot)) });
+      const template = await readFile(
+        path.join(repoRoot, "theme", "home.html"),
+        "utf8",
+      );
+      sendJson(response, 200, {
+        ok: true,
+        html: renderHome(template, site, await listArticles(repoRoot)),
+      });
     } else {
       await syncSite(repoRoot, site);
-      sendJson(response, 200, { ok: true, site, message: "已保存首页配置，并同步所有文章的站点名称和导航。" });
+      sendJson(response, 200, {
+        ok: true,
+        site,
+        message: "已保存首页配置，并同步所有文章的站点名称和导航。",
+      });
     }
     return;
   }
@@ -154,7 +249,11 @@ async function handleApi(request, response, pathname, repoRoot) {
     assertMutationRequest(request);
     const payload = await readJson(request);
     const asset = await uploadArticleAsset(repoRoot, payload);
-    sendJson(response, 201, { ok: true, asset, message: `图片已保存为 ${asset.fileName}。` });
+    sendJson(response, 201, {
+      ok: true,
+      asset,
+      message: `图片已保存为 ${asset.fileName}。`,
+    });
     return;
   }
 
@@ -163,15 +262,31 @@ async function handleApi(request, response, pathname, repoRoot) {
     const payload = await readJson(request);
     let article;
     try {
-      if (payload.article) article = await saveArticle(repoRoot, payload.article);
+      if (payload.article)
+        article = await saveArticle(repoRoot, payload.article);
       await syncSite(repoRoot);
-      const paths = ["site.config.json", "index.html", "styles.css", "script.js", "posts", "assets"];
-      const commitMessage = payload.commitMessage || "publish: saved site content";
+      const paths = [
+        "site.config.json",
+        "index.html",
+        "styles.css",
+        "script.js",
+        "posts",
+        "assets",
+      ];
+      const commitMessage =
+        payload.commitMessage || "publish: saved site content";
       const publish = await publishPaths(repoRoot, paths, commitMessage);
-      sendJson(response, 200, { ok: true, article, publish,
-        message: publish.pushed ? `已推送到 origin（${publish.commit}）。部署状态请查看 GitHub Actions。` : publish.message });
+      sendJson(response, 200, {
+        ok: true,
+        article,
+        publish,
+        message: publish.pushed
+          ? `已推送到 origin（${publish.commit}）。部署状态请查看 GitHub Actions。`
+          : publish.message,
+      });
     } catch (error) {
-      if (article && error instanceof StudioError) error.context = { ...error.context, savedArticle: article };
+      if (article && error instanceof StudioError)
+        error.context = { ...error.context, savedArticle: article };
       throw error;
     }
     return;
@@ -180,9 +295,12 @@ async function handleApi(request, response, pathname, repoRoot) {
   throw new StudioError("API 地址不存在。", { code: "NOT_FOUND", status: 404 });
 }
 
-function resolveStaticFile(repoRoot, pathname) {
+function resolveStaticFile(repoRoot, pathname, workspace) {
   if (pathname === "/studio" || pathname === "/studio/") {
-    return within(path.join(repoRoot, "studio", "public"), "index.html");
+    return within(
+      path.join(repoRoot, "studio", "public"),
+      workspace ? "writing.html" : "index.html",
+    );
   }
   if (pathname.startsWith("/studio/")) {
     const relative = pathname.slice("/studio/".length);
@@ -192,8 +310,10 @@ function resolveStaticFile(repoRoot, pathname) {
   if (pathname === "/index.html") return within(repoRoot, "index.html");
   if (pathname === "/styles.css") return within(repoRoot, "styles.css");
   if (pathname === "/script.js") return within(repoRoot, "script.js");
-  if (pathname.startsWith("/assets/")) return within(path.join(repoRoot, "assets"), pathname.slice(8));
-  if (pathname.startsWith("/posts/")) return within(path.join(repoRoot, "posts"), pathname.slice(7));
+  if (pathname.startsWith("/assets/"))
+    return within(path.join(repoRoot, "assets"), pathname.slice(8));
+  if (pathname.startsWith("/posts/"))
+    return within(path.join(repoRoot, "posts"), pathname.slice(7));
   return null;
 }
 
@@ -201,23 +321,39 @@ async function sendFile(response, filePath, headOnly, allowedRoot) {
   let fileStats;
   try {
     const actual = await realpath(filePath);
-    if (actual !== allowedRoot && !actual.startsWith(`${allowedRoot}${path.sep}`)) {
-      throw new StudioError("文件路径超出允许范围。", { code: "INVALID_PATH", status: 403 });
+    if (
+      actual !== allowedRoot &&
+      !actual.startsWith(`${allowedRoot}${path.sep}`)
+    ) {
+      throw new StudioError("文件路径超出允许范围。", {
+        code: "INVALID_PATH",
+        status: 403,
+      });
     }
     fileStats = await stat(actual);
   } catch (error) {
     if (error?.code === "ENOENT") {
-      sendJson(response, 404, { ok: false, error: "文件不存在。", code: "NOT_FOUND" });
+      sendJson(response, 404, {
+        ok: false,
+        error: "文件不存在。",
+        code: "NOT_FOUND",
+      });
       return;
     }
     throw error;
   }
   if (!fileStats.isFile()) {
-    sendJson(response, 404, { ok: false, error: "文件不存在。", code: "NOT_FOUND" });
+    sendJson(response, 404, {
+      ok: false,
+      error: "文件不存在。",
+      code: "NOT_FOUND",
+    });
     return;
   }
 
-  const contentType = CONTENT_TYPES.get(path.extname(filePath).toLowerCase()) || "application/octet-stream";
+  const contentType =
+    CONTENT_TYPES.get(path.extname(filePath).toLowerCase()) ||
+    "application/octet-stream";
   const headers = {
     "Content-Type": contentType,
     "Content-Length": fileStats.size,
@@ -242,7 +378,9 @@ function assertLocalHost(request) {
 }
 
 function assertMutationRequest(request) {
-  const contentType = String(request.headers["content-type"] ?? "").toLowerCase();
+  const contentType = String(
+    request.headers["content-type"] ?? "",
+  ).toLowerCase();
   if (!contentType.startsWith("application/json")) {
     throw new StudioError("写操作必须使用 application/json。", {
       code: "JSON_REQUIRED",
@@ -253,7 +391,8 @@ function assertMutationRequest(request) {
   if (!origin) return;
   if (origin !== `http://${request.headers.host}`) {
     throw new StudioError("拒绝来自其他来源的写操作。", {
-      code: "CROSS_ORIGIN_MUTATION", status: 403,
+      code: "CROSS_ORIGIN_MUTATION",
+      status: 403,
     });
   }
 }
@@ -274,7 +413,10 @@ async function readJson(request) {
   try {
     return JSON.parse(Buffer.concat(chunks).toString("utf8") || "{}");
   } catch {
-    throw new StudioError("JSON 格式无效。", { code: "INVALID_JSON", status: 400 });
+    throw new StudioError("JSON 格式无效。", {
+      code: "INVALID_JSON",
+      status: 400,
+    });
   }
 }
 
@@ -300,7 +442,9 @@ function sendError(response, error) {
       error: error.message,
       code: error.code,
       details: error.details || undefined,
-      context: Object.keys(error.context || {}).length ? error.context : undefined,
+      context: Object.keys(error.context || {}).length
+        ? error.context
+        : undefined,
     });
     return;
   }
@@ -321,8 +465,14 @@ function setBaseHeaders(response) {
 function within(base, relative) {
   const resolvedBase = path.resolve(base);
   const resolved = path.resolve(resolvedBase, relative);
-  if (resolved !== resolvedBase && !resolved.startsWith(`${resolvedBase}${path.sep}`)) {
-    throw new StudioError("文件路径无效。", { code: "INVALID_PATH", status: 422 });
+  if (
+    resolved !== resolvedBase &&
+    !resolved.startsWith(`${resolvedBase}${path.sep}`)
+  ) {
+    throw new StudioError("文件路径无效。", {
+      code: "INVALID_PATH",
+      status: 422,
+    });
   }
   return resolved;
 }
@@ -336,10 +486,16 @@ async function exists(filePath) {
   }
 }
 
-const isDirectRun = process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href;
+const isDirectRun =
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href;
 if (isDirectRun) {
   const port = Number(process.env.BLOG_STUDIO_PORT || 4174);
-  syncSite(defaultRepoRoot).then(() => startStudioServer({ port }))
+  resolveWorkspace(defaultRepoRoot)
+    .then(async (workspace) => {
+      if (!workspace) await syncSite(defaultRepoRoot);
+      return startStudioServer({ port, workspace });
+    })
     .then(() => {
       console.log(`\n  Blog Studio\n  http://127.0.0.1:${port}/studio/\n`);
       console.log("  按 Ctrl+C 停止。\n");
